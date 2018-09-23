@@ -79,20 +79,3 @@ print_kserver(ks)
 
 ks.fission(1, 0)
 print_kserver(ks)
-
-
-# tree_conversion
-ete_tree = basic_to_ete(ks.tree)
-print(ete_tree)
-ts = ete3.TreeStyle()
-# ts.mode = "c"
-# ts.arc_start = 0
-# ts.arc_span = 180
-ts.branch_vertical_margin = 20
-ts.rotation = 90
-
-for node in ete_tree.traverse():
-    node.add_face(ete3.RectFace(5, 10, "Red", "MediumBlue"), column=0,
-                  position="branch-right")
-
-ete_tree.show(tree_style=ts)
