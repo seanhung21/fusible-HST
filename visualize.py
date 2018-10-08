@@ -1,7 +1,6 @@
 from basic import *
 from kserver import *
 from tkinter import *
-from test import ks
 
 
 class TreeDrawing:
@@ -102,8 +101,8 @@ class App(Frame):
             print('error')
 
 
-if __name__ == '__main__':
+def visualize(kserver):
     root = Tk()
     root.title("draw_tree")
-    app = App(ks, master=root)
+    app = App(kserver, master=root)
     root.mainloop()
