@@ -21,17 +21,23 @@ def generate_kserver(N):
     return KServer(sps)
 
 
-def main(N, mass_function, alpha, beta, r):
+def generate_simple_m(x):
+    def m(itv):
+        if itv.contains(x):
+            return 1
+        else:
+            return 0
+    return m
+
+
+def main(N, mass_function, big_alpha, small_alpha, r):
 
     # Generate a simple kserver object
     ks = generate_kserver(N)
-
-    # (1) Fuse heavy intervals
-
-    # (2) Deactive light intervals
 
     visualize(ks)
 
 
 if __name__ == '__main__':
-    main(7, 0, 0, 0, 0)
+    simple_m = generate_simple_m(0.1)
+    main(7, simple_m, 0, 0, 0)
