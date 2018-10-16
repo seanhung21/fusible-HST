@@ -23,6 +23,14 @@ def generate_kserver(N):
 
 def generate_simple_m(x):
     def m(itv):
+        """Mass contained in the given interval.
+
+        Args:
+            itv (:obj:`Interval`): The given interval.
+
+        Returns:
+            int: The amount of mass contained in the interval.
+        """
         if itv.contains(x):
             return 1
         else:
@@ -30,14 +38,24 @@ def generate_simple_m(x):
     return m
 
 
+def tmp_m(itv):
+    total = 0
+    if itv.contains(0.3):
+        total += 0.91
+    if itv.contains(0.9):
+        total += 0.09
+    return total
+
+
 def main(N, mass_function, big_alpha, small_alpha, r):
 
     # Generate a simple kserver object
     ks = generate_kserver(N)
+    ks.fuse_heavy(mass_function, big_alpha, r)
 
     visualize(ks)
 
 
 if __name__ == '__main__':
-    simple_m = generate_simple_m(0.1)
-    main(7, simple_m, 0, 0, 0)
+    simple_m = generate_simple_m(0.3)
+    main(4, tmp_m, 0.9, 0, 4)

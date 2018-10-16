@@ -280,6 +280,56 @@ class KServer:
                 if flag:
                     self._fission(child, next_level + 1, target_level, cluster)
 
+    # work for specific trees only (2^(-i))
+    def fuse_heavy(self, mass, alpha, r):
+        heavy_list = []
+        self._find_heavy(self.tree.root, mass, alpha, r, 0, heavy_list)
+        for (level, itv) in heavy_list:
+
+            print(level, itv.left, itv.right)
+
+            length = 2**(-level)
+            left_itv = Interval(itv.left - length, itv.left)
+            right_itv = Interval(itv.right, itv.right + length)
+            a = self._find_cluster_including_interval(level, itv)
+            b = self._find_cluster_including_interval(level, left_itv)
+            if a is not None and b is not None:
+                self.fusion(level, a, b)
+            a = self._find_cluster_including_interval(level, itv)
+            b = self._find_cluster_including_interval(level, right_itv)
+            if a is not None and b is not None:
+                self.fusion(level, a, b)
+
+    def _find_heavy(self, node, mass, alpha, r, level, heavy_list):
+        itv = node.data.first.data[0].data[0]
+        length = 2**(-level)
+        mass_in_N = mass(Interval(itv.left - r * length, itv.right + r * length))
+        if mass(itv) > alpha * mass_in_N:
+            heavy_list.append((level, itv))
+        for child in node.children:
+            self._find_heavy(child, mass, alpha, r, level + 1, heavy_list)
+
+    def _find_cluster_including_interval(self, j, itv):
+        """Find the cluster in j-th semi-clustering that includes the given interval.
+
+        Args:
+            j (int): The index of the semi-clustering.
+            itv (:obj:`Interval`): The given interval.
+
+        Returns:
+            int: The index of the cluster in the j-th semi-clustering.
+            None: If no cluster include the given interval.
+        """
+        sc = self.semi_clusterings[j]
+        for i in range(len(sc.clusters)):
+            cluster = sc.clusters[i]
+            for s in cluster.sets:
+                for interval in s.data:
+                    if itv.left >= interval.left and itv.right <= interval.right:
+                        return i
+        return None
+
+
     def print_tree(self):
         """Print the tree structure of the current sequence of semi-clusterings."""
         self._print_tree(self.tree.root, 0)
