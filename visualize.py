@@ -13,22 +13,33 @@ class TreeDrawing:
         self.y0 = 50
         self.node_color = 0
 
-    def draw_tree(self):
-        self._draw_tree(self.tree.root, 0)
+    def draw_tree(self, mass_f, small_alpha):
+        self._draw_tree(self.tree.root, 0, mass_f, small_alpha)
 
-    def _draw_tree(self, node, level):
-        mid_pos = self.draw_node(node, level)
+    def _draw_tree(self, node, level, mass_f, small_alpha):
+        mid_pos = self._draw_node(node, level, mass_f, small_alpha)
         for child in node.children:
             self.canvas.create_line(mid_pos, self.y0 + level * 100 + 50,
-                                    self._draw_tree(child, level + 1),
+                                    self._draw_tree(child, level + 1, mass_f, small_alpha),
                                     self.y0 + (level + 1) * 100)
         return mid_pos
 
-    def draw_node(self, node, level):
-        col_string = '#{0:06x}'.format(self.node_color)
-        self.node_color = (self.node_color + 100003) % 16777216
+    def _draw_node(self, node, level, mass_f, small_alpha):
         mid_pos = None
+        mass = 0
         for e in node.data:
+            for itv in e[0].data:
+                mass += mass_f(itv)
+        if mass < small_alpha:
+            col_string = '#b3b6b7'      # gray
+        else:
+            rg_value = 255 - min(255, int(mass * 128 + 128))
+            rgb = (rg_value, rg_value, 255)
+            col_string = '#' + ''.join('{:02X}'.format(c) for c in rgb)
+            # col_string = '#{0:06x}'.format(self.node_color)
+            # self.node_color = (self.node_color + 100003) % 16777216
+
+        for e in node.data:         # TODO: change mid_pos calculation
             content = e[0]
             for itv in content.data:
                 if mid_pos is None:
@@ -45,7 +56,7 @@ class TreeDrawing:
 
 class App(Frame):
 
-    def __init__(self, kserver, master=None):
+    def __init__(self, kserver, mass_f, small_alpha, master=None):
         super().__init__(master)
         self.pack()
 
@@ -66,17 +77,22 @@ class App(Frame):
 
         self.entry = Entry(self.user_frame)
         self.button = Button(self.user_frame, text='Enter')
+        self.draw_button = Button(self.user_frame, text='Draw')
+        self.draw_button.pack(side="top")
         self.button.pack(side="bottom")
         self.entry.pack(side="bottom")
         self.label.pack(side="bottom")
         self.kserver = kserver
         self.td = TreeDrawing(self.canvas, kserver.tree)
-        self.td.draw_tree()
+        self.mass = mass_f
+        self.s_alpha = small_alpha
+        # self.td.draw_tree()
 
         self.operation = StringVar()
         self.entry["textvariable"] = self.operation
-        self.button.bind('<Button-1>', self.do_operation)
         # TODO: bind 'Return' to self.do_operation
+        self.button.bind('<Button-1>', self.do_operation)
+        self.draw_button.bind('<Button-1>', self.draw)
 
     def do_operation(self, event):
         try:
@@ -100,9 +116,12 @@ class App(Frame):
         except Exception:
             print('error')
 
+    def draw(self, event):
+        self.td.draw_tree(self.mass, self.s_alpha)
 
-def visualize(kserver):
+
+def visualize(kserver, mass_f, small_alpha):
     root = Tk()
     root.title("draw_tree")
-    app = App(kserver, master=root)
+    app = App(kserver, mass_f, small_alpha, master=root)
     root.mainloop()
