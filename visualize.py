@@ -39,18 +39,27 @@ class TreeDrawing:
             # col_string = '#{0:06x}'.format(self.node_color)
             # self.node_color = (self.node_color + 100003) % 16777216
 
+        left_border = 1600
+        right_border = 0
+        upper = self.y0 + level * 100
+        lower = upper + 50
         for e in node.data:         # TODO: change mid_pos calculation
             content = e[0]
             for itv in content.data:
                 if mid_pos is None:
                     mid_pos = self.x0 + int(itv.left * self.scale) + \
                               int((itv.right - itv.left) / 2 * self.scale)
+                left = self.x0 + int(itv.left * self.scale)
+                right = self.x0 + int(itv.right * self.scale)
+                left_border = min(left_border, left)
+                right_border = max(right_border, right)
+                border_color = 'black'
                 self.canvas.create_rectangle(
-                    self.x0 + int(itv.left * self.scale),
-                    self.y0 + level * 100,
-                    self.x0 + int(itv.right * self.scale),
-                    self.y0 + level * 100 + 50,
-                    fill=col_string, width=0)
+                    left, upper, right, lower, fill=col_string, width=0)
+                self.canvas.create_line(left, upper, right, upper, fill=border_color)
+                self.canvas.create_line(left, lower, right, lower, fill=border_color)
+        self.canvas.create_line(left_border, upper, left_border, lower, fill=border_color)
+        self.canvas.create_line(right_border, upper, right_border, lower, fill=border_color)
         return mid_pos
 
 
