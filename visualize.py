@@ -5,13 +5,14 @@ from tkinter import *
 
 class TreeDrawing:
 
-    def __init__(self, canvas, tree):
+    def __init__(self, canvas, tree, mass_f, small_alpha):
         self.canvas = canvas
         self.tree = tree
         self.scale = 1000
         self.x0 = 300
         self.y0 = 50
         self.node_color = 0
+        self.draw_tree(mass_f, small_alpha)
 
     def draw_tree(self, mass_f, small_alpha):
         self._draw_tree(self.tree.root, 0, mass_f, small_alpha)
@@ -92,9 +93,9 @@ class App(Frame):
         self.entry.pack(side="bottom")
         self.label.pack(side="bottom")
         self.kserver = kserver
-        self.td = TreeDrawing(self.canvas, kserver.tree)
         self.mass = mass_f
         self.s_alpha = small_alpha
+        self.td = TreeDrawing(self.canvas, kserver.tree, self.mass, self.s_alpha)
         # self.td.draw_tree()
 
         self.operation = StringVar()
