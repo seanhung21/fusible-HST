@@ -51,12 +51,9 @@ def main(N, mass_function, big_alpha, small_alpha, r):
 
     # Generate a simple kserver object
     ks = generate_kserver(N)
-    visualize(ks, tmp_m, 0.01)
-    ks.fuse_heavy(mass_function, big_alpha, r)
-    ks.print_tree()
-    visualize(ks, tmp_m, 0.01)
+    visualize(ks, mass_function, big_alpha, small_alpha, r)
 
 
 if __name__ == '__main__':
     simple_m = generate_simple_m(0.3)
-    main(4, tmp_m, 0.9, 0, 4)
+    main(4, tmp_m, 0.9, 0.01, 4)

@@ -66,7 +66,7 @@ class TreeDrawing:
 
 class App(Frame):
 
-    def __init__(self, kserver, mass_f, small_alpha, master=None):
+    def __init__(self, kserver, mass_f, big_alpha, small_alpha, r, master=None):
         super().__init__(master)
         self.pack()
 
@@ -87,14 +87,15 @@ class App(Frame):
 
         self.entry = Entry(self.user_frame)
         self.button = Button(self.user_frame, text='Enter')
-        self.draw_button = Button(self.user_frame, text='Draw')
-        self.draw_button.pack(side="top")
         self.button.pack(side="bottom")
         self.entry.pack(side="bottom")
         self.label.pack(side="bottom")
         self.kserver = kserver
         self.mass = mass_f
+        self.b_alpha = big_alpha
         self.s_alpha = small_alpha
+        self.r = r
+        self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
         self.td = TreeDrawing(self.canvas, kserver.tree, self.mass, self.s_alpha)
         # self.td.draw_tree()
 
@@ -102,7 +103,13 @@ class App(Frame):
         self.entry["textvariable"] = self.operation
         # TODO: bind 'Return' to self.do_operation
         self.button.bind('<Button-1>', self.do_operation)
-        self.draw_button.bind('<Button-1>', self.draw)
+
+        self.fuse_button = Button(self.user_frame, text='fuse (step)')
+        self.fuse_all_button = Button(self.user_frame, text='fuse (last)')
+        self.fuse_button.pack(side="top")
+        self.fuse_all_button.pack(side="top")
+        self.fuse_button.bind('<Button-1>', self.fuse_step)
+        self.fuse_all_button.bind('<Button-1>', self.fuse_last)
 
     def do_operation(self, event):
         try:
@@ -126,12 +133,24 @@ class App(Frame):
         except Exception:
             print('error')
 
-    def draw(self, event):
+    def fuse_step(self, event):
+        try:
+            print(next(self.fhg))   # TODO: Show in GUI Entry
+        except StopIteration:
+            # TODO: error message
+            None
+        self.canvas.delete('all')
+        self.td.draw_tree(self.mass, self.s_alpha)
+
+    def fuse_last(self, event):
+        for e in self.fhg:
+            print(e)
+        self.canvas.delete('all')
         self.td.draw_tree(self.mass, self.s_alpha)
 
 
-def visualize(kserver, mass_f, small_alpha):
+def visualize(kserver, mass_f, big_alpha, small_alpha, r):
     root = Tk()
     root.title("draw_tree")
-    app = App(kserver, mass_f, small_alpha, master=root)
+    app = App(kserver, mass_f, big_alpha, small_alpha, r, master=root)
     root.mainloop()

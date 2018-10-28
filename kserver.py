@@ -281,13 +281,12 @@ class KServer:
                     self._fission(child, next_level + 1, target_level, cluster)
 
     # work for specific trees only (2^(-i))
-    def fuse_heavy(self, mass, alpha, r):
+    # Generator: Each call fuse a heavy interval until all are fused
+    # TODO: Instance method or not?
+    def fuse_heavy_generator(self, mass, alpha, r):
         heavy_list = []
         self._find_heavy(self.tree.root, mass, alpha, r, 0, heavy_list)
         for (level, itv) in heavy_list:
-
-            print(level, itv.left, itv.right)
-
             length = 2**(-level)
             left_itv = Interval(itv.left - length, itv.left)
             right_itv = Interval(itv.right, itv.right + length)
@@ -299,6 +298,8 @@ class KServer:
             b = self._find_cluster_including_interval(level, right_itv)
             if a is not None and b is not None:
                 self.fusion(level, a, b)
+
+            yield 'level=%d, left=%f, right=%f' % (level, itv.left, itv.right)
 
     def _find_heavy(self, node, mass, alpha, r, level, heavy_list):
         itv = node.data.first.data[0].data[0]
