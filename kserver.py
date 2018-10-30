@@ -299,7 +299,7 @@ class KServer:
             if a is not None and b is not None:
                 self.fusion(level, a, b)
 
-            yield 'level=%d, left=%f, right=%f' % (level, itv.left, itv.right)
+            yield 'level=%d, itv=[%f, %f]' % (level, itv.left, itv.right)
 
     def _find_heavy(self, node, mass, alpha, r, level, heavy_list):
         itv = node.data.first.data[0].data[0]

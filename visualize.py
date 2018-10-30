@@ -110,6 +110,13 @@ class App(Frame):
         self.fuse_all_button.pack(side="top")
         self.fuse_button.bind('<Button-1>', self.fuse_step)
         self.fuse_all_button.bind('<Button-1>', self.fuse_last)
+        self.fusion_label0 = Label(self.user_frame, text='Last fused: ')
+        self.last_fused = StringVar()
+        self.fusion_label1 = Label(self.user_frame)
+        self.last_fused.set('None')
+        self.fusion_label1["textvariable"] = self.last_fused
+        self.fusion_label0.pack()
+        self.fusion_label1.pack()
 
     def do_operation(self, event):
         try:
@@ -135,7 +142,7 @@ class App(Frame):
 
     def fuse_step(self, event):
         try:
-            print(next(self.fhg))   # TODO: Show in GUI Entry
+            self.last_fused.set(next(self.fhg))
         except StopIteration:
             # TODO: error message
             None
@@ -144,7 +151,7 @@ class App(Frame):
 
     def fuse_last(self, event):
         for e in self.fhg:
-            print(e)
+            self.last_fused.set(e)   # TODO: change only during last iteration
         self.canvas.delete('all')
         self.td.draw_tree(self.mass, self.s_alpha)
 
