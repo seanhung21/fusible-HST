@@ -56,4 +56,4 @@ def main(N, mass_function, big_alpha, small_alpha, r):
 
 if __name__ == '__main__':
     simple_m = generate_simple_m(0.3)
-    main(4, tmp_m, 0.9, 0.01, 4)
+    main(8, tmp_m, 0.9, 0.01, 4)
