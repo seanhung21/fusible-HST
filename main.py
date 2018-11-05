@@ -138,6 +138,20 @@ class App(Frame):
         self.fusion_label0.pack()
         self.fusion_label1.pack()
 
+        self.generate_tree_label0 = Label(self.user_frame,
+                                          text='Generate New Tree:')
+        self.generate_tree_label1 = Label(self.user_frame, text='levels (0~8) = ')
+        self.generate_tree_entry = Entry(self.user_frame)
+        self.generate_tree_button = Button(self.user_frame, text='Generate')
+        self.tree_levels_input = StringVar()
+        self.generate_tree_entry["textvariable"] = self.tree_levels_input
+        self.generate_tree_button.bind('<Button-1>',
+                                       self._generate_new_tree)
+        self.generate_tree_label0.pack()
+        self.generate_tree_label1.pack()
+        self.generate_tree_entry.pack()
+        self.generate_tree_button.pack()
+
     def _draw_mass(self):
         self.drawing.draw_mass(self.mass)
 
@@ -177,6 +191,18 @@ class App(Frame):
         for e in self.fhg:
             self.last_fused.set(e)   # TODO: change only during last iteration
         self._draw_tree()
+
+    def _generate_new_tree(self, event):
+        try:
+            N = int(self.generate_tree_entry.get())
+            if N < 0:
+                raise Exception()
+            self.kserver = generate_kserver(N)
+            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+            self._draw_mass()
+            self._draw_tree()
+        except Exception:
+            print('error')
 
 
 def generate_kserver(N):
