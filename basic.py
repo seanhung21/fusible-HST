@@ -10,7 +10,8 @@ class Interval:
     """
 
     def __init__(self, left, right):
-        """Form a bounded interval.
+        """Form a half-closed bounded interval. If the right endpoint is 1,
+        form a closed interval instead.
 
         Args:
             left (float): The left endpoint.
@@ -23,7 +24,11 @@ class Interval:
             raise Exception('invalid interval: empty set')
         self.left = left
         self.right = right
-        self.string = "[" + str(self.left) + ", " + str(self.right) + "]"
+        self.string = "[" + str(self.left) + ", " + str(self.right)
+        if self.right == 1:
+            self.string += "]"
+        else:
+            self.string += ")"
 
     def intersect(self, other):
         """Take the intersection of this interval and the given interval.
@@ -51,10 +56,10 @@ class Interval:
         Returns:
             bool: True if the interval contains the given value, False otherwise.
         """
-        if x >= self.left and x <= self.right:
+        if x >= self.left and x < self.right:
             return True
         else:
-            return False
+            return self.right == 1 and x == self.right
 
     def __str__(self):
         """String representation of the interval in the common format used in mathematics.
