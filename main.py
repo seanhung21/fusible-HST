@@ -141,6 +141,9 @@ class App(Frame):
         self.fusion_label0.pack()
         self.fusion_label1.pack()
 
+        self.empty_label = Label(self.user_frame, text='\n\n')
+        self.empty_label.pack()
+
         self.generate_tree_label0 = Label(self.user_frame,
                                           text='Generate New Tree:')
         self.generate_tree_label1 = Label(self.user_frame, text='levels (0~8) = ')
@@ -178,6 +181,7 @@ class App(Frame):
         self.rand_cont_entry = Entry(self.user_frame)
         self.rand_cont_button = Button(self.user_frame, text='Generate')
         self.rand_cont_input = StringVar()
+        self.rand_cont_input.set(str(10))
         self.rand_cont_entry["textvariable"] = self.rand_cont_input
         self.rand_cont_button.bind('<Button-1>',
                                    self._generate_new_rand_cont)
@@ -310,7 +314,7 @@ class App(Frame):
             self._fuse_last()
             self._draw_mass()
             self._draw_tree()
-        except Exception():
+        except Exception:
             print('invalid input range')
 
 
