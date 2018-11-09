@@ -1,6 +1,9 @@
 from basic import *
 from kserver import *
 from tkinter import *
+import random
+import bisect
+import time
 
 
 class Drawing(Frame):
@@ -129,7 +132,7 @@ class App(Frame):
         self.fuse_button.pack(side="top")
         self.fuse_all_button.pack(side="top")
         self.fuse_button.bind('<Button-1>', self._fuse_step)
-        self.fuse_all_button.bind('<Button-1>', self._fuse_last)
+        self.fuse_all_button.bind('<Button-1>', self._fuse_last_event)
         self.fusion_label0 = Label(self.user_frame, text='Last fused: ')
         self.last_fused = StringVar()
         self.fusion_label1 = Label(self.user_frame)
@@ -144,6 +147,7 @@ class App(Frame):
         self.generate_tree_entry = Entry(self.user_frame)
         self.generate_tree_button = Button(self.user_frame, text='Generate')
         self.tree_levels_input = StringVar()
+        self.tree_levels_input.set(str(8))
         self.generate_tree_entry["textvariable"] = self.tree_levels_input
         self.generate_tree_button.bind('<Button-1>',
                                        self._generate_new_tree)
@@ -151,6 +155,58 @@ class App(Frame):
         self.generate_tree_label1.pack()
         self.generate_tree_entry.pack()
         self.generate_tree_button.pack()
+
+        self.degenerate_label0 = Label(self.user_frame,
+                                          text='New Degenerate Distribution:')
+        self.degenerate_label1 = Label(self.user_frame, text='x (in [0, 1]) =')
+        self.degenerate_entry = Entry(self.user_frame)
+        self.degenerate_button = Button(self.user_frame, text='Generate')
+        self.degenerate_input = StringVar()
+        self.degenerate_input.set(str(0.33))
+        self.degenerate_entry["textvariable"] = self.degenerate_input
+        self.degenerate_button.bind('<Button-1>',
+                                    self._generate_new_degenerate)
+        self.degenerate_label0.pack()
+        self.degenerate_label1.pack()
+        self.degenerate_entry.pack()
+        self.degenerate_button.pack()
+
+        self.rand_cont_label0 = Label(self.user_frame,
+                                          text='New Random Continous Distribution:')
+        self.rand_cont_label1 = Label(self.user_frame,
+                                      text='number of samples = ')
+        self.rand_cont_entry = Entry(self.user_frame)
+        self.rand_cont_button = Button(self.user_frame, text='Generate')
+        self.rand_cont_input = StringVar()
+        self.rand_cont_entry["textvariable"] = self.rand_cont_input
+        self.rand_cont_button.bind('<Button-1>',
+                                   self._generate_new_rand_cont)
+        self.rand_cont_label0.pack()
+        self.rand_cont_label1.pack()
+        self.rand_cont_entry.pack()
+        self.rand_cont_button.pack()
+
+        self.moving_point_label0 = Label(self.user_frame,
+                                         text='Single Moving Point:')
+        self.moving_point_label1 = Label(self.user_frame, text='From')
+        self.moving_point_entry1 = Entry(self.user_frame)
+        self.moving_point_label2 = Label(self.user_frame, text='To')
+        self.moving_point_entry2 = Entry(self.user_frame)
+        self.moving_point_button = Button(self.user_frame, text='Animate')
+        self.moving_point_input1 = StringVar()
+        self.moving_point_input1.set(str(0))
+        self.moving_point_input2 = StringVar()
+        self.moving_point_input2.set(str(1))
+        self.moving_point_entry1["textvariable"] = self.moving_point_input1
+        self.moving_point_entry2["textvariable"] = self.moving_point_input2
+        self.moving_point_button.bind('<Button-1>',
+                                      self._animate_moving_point)
+        self.moving_point_label0.pack()
+        self.moving_point_label1.pack()
+        self.moving_point_entry1.pack()
+        self.moving_point_label2.pack()
+        self.moving_point_entry2.pack()
+        self.moving_point_button.pack()
 
     def _draw_mass(self):
         self.drawing.draw_mass(self.mass)
@@ -187,9 +243,12 @@ class App(Frame):
             None
         self._draw_tree()
 
-    def _fuse_last(self, event):
+    def _fuse_last(self):
         for e in self.fhg:
             self.last_fused.set(e)   # TODO: change only during last iteration
+
+    def _fuse_last_event(self, event):
+        self._fuse_last()
         self._draw_tree()
 
     def _generate_new_tree(self, event):
@@ -202,7 +261,57 @@ class App(Frame):
             self._draw_mass()
             self._draw_tree()
         except Exception:
-            print('error')
+            print('invalid input levels')
+
+    def _generate_new_degenerate(self, event):
+        try:
+            x = float(self.degenerate_entry.get())
+            self._new_degenerate(x)
+            self._draw_mass()
+            self._draw_tree()
+        except Exception:
+            print('invalid input x')
+
+    def _new_degenerate(self, x):
+        if x < 0 or x > 1:
+            raise Exception()
+        self.mass = new_degenerate_mass(x)
+        self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+        self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+
+    def _generate_new_rand_cont(self, event):
+        try:
+            num = int(self.rand_cont_entry.get())
+            if num <= 0:
+                raise Exception()
+            self.mass = new_random_cont_mass(num)
+            self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+            self._draw_mass()
+            self._draw_tree()
+        except Exception:
+            print('invalid input number of samples')
+
+    def _animate_moving_point(self, event):
+        try:
+            curr = float(self.moving_point_input1.get())
+            end = float(self.moving_point_input2.get())
+            if curr < 0 or end > 1 or curr > end:
+                raise Exception()
+            step = 3e-2
+            while curr < end:
+                self._new_degenerate(curr)
+                self._fuse_last()
+                self._draw_mass()
+                self._draw_tree()
+                self.drawing.canvas.update_idletasks()
+                curr += step
+            self._new_degenerate(end)
+            self._fuse_last()
+            self._draw_mass()
+            self._draw_tree()
+        except Exception():
+            print('invalid input range')
 
 
 def generate_kserver(N):
@@ -223,7 +332,7 @@ def generate_kserver(N):
     return KServer(sps)
 
 
-def generate_simple_m(x):
+def new_degenerate_mass(x):
     def m(itv):
         """Mass contained in the given interval.
 
@@ -240,6 +349,30 @@ def generate_simple_m(x):
     return m
 
 
+def new_random_cont_mass(num):
+    """Generates a new random continuous mass distribution on [0, 1] by
+    uniformly drawing the specified number of samples on [0, 1].
+
+    Args:
+        num (int): The specified number of points.
+
+    Returns:
+        :obj:`function`: The mass function generated.
+    """
+    points = []
+    for i in range(num):
+        points.append(random.random())
+    points.sort()
+
+    def m(itv):
+        points_list = points
+        left = bisect.bisect_left(points_list, itv.left)
+        right = bisect.bisect_right(points_list, itv.right)
+        return (right - left) / len(points_list)
+
+    return m
+
+
 def tmp_m(itv):
     total = 0
     if itv.contains(0.3):
@@ -253,5 +386,5 @@ if __name__ == '__main__':
     ks = generate_kserver(8)
     root = Tk()
     root.title("Visualization")
-    app = App(ks, tmp_m, 0.9, 0.01, 4, master=root)
+    app = App(ks, new_degenerate_mass(0.33), 0.9, 0.01, 4, master=root)
     root.mainloop()
