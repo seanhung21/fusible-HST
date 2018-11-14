@@ -23,9 +23,17 @@ class Drawing(Frame):
         self.level_gap = 25
         self.mass_y0 = 150
         self.mass_height = 100
+        self.mass_scale = 0.7
 
         self.canvas.create_line(self.x0, self.mass_y0,
                                 self.x0 + self.scale, self.mass_y0, width=4)
+        self.canvas.create_line(self.x0, self.mass_y0,
+                                self.x0, self.mass_y0 - self.mass_height,
+                                width=4)
+        self.canvas.create_text(self.x0 - 25, self.mass_y0,
+                                text=str(0), font=("Courier", 14))
+        self.canvas.create_text(self.x0 - 25, self.mass_y0 - self.mass_height,
+                                text=str(self.mass_scale), font=("Courier", 14))
 
     def draw_mass(self, mass_f):
         self.canvas.delete('mass')
@@ -33,7 +41,7 @@ class Drawing(Frame):
             m = mass_f(Interval(i / self.scale, (i+1) / self.scale))
             self.canvas.create_line(self.x0 + i, self.mass_y0,
                                     self.x0 + i,
-                                    self.mass_y0 - self.mass_height * m,
+                                    self.mass_y0 - self.mass_height * m / self.mass_scale,
                                     fill='blue', tags='mass')
 
     def draw_tree(self, tree, mass_f, s_alpha):
@@ -141,8 +149,8 @@ class App(Frame):
         self.fusion_label0.pack()
         self.fusion_label1.pack()
 
-        self.empty_label = Label(self.user_frame, text='\n\n')
-        self.empty_label.pack()
+        self.empty_label0 = Label(self.user_frame, text='\n\n')
+        self.empty_label0.pack()
 
         self.generate_tree_label0 = Label(self.user_frame,
                                           text='Generate New Tree:')
@@ -174,21 +182,24 @@ class App(Frame):
         self.degenerate_entry.pack()
         self.degenerate_button.pack()
 
-        self.rand_cont_label0 = Label(self.user_frame,
-                                          text='New Random Continous Distribution:')
-        self.rand_cont_label1 = Label(self.user_frame,
-                                      text='number of samples = ')
-        self.rand_cont_entry = Entry(self.user_frame)
-        self.rand_cont_button = Button(self.user_frame, text='Generate')
-        self.rand_cont_input = StringVar()
-        self.rand_cont_input.set(str(10))
-        self.rand_cont_entry["textvariable"] = self.rand_cont_input
-        self.rand_cont_button.bind('<Button-1>',
-                                   self._generate_new_rand_cont)
-        self.rand_cont_label0.pack()
-        self.rand_cont_label1.pack()
-        self.rand_cont_entry.pack()
-        self.rand_cont_button.pack()
+        self.rand_label0 = Label(self.user_frame,
+                                          text='New Random Distribution:')
+        self.rand_label1 = Label(self.user_frame,
+                                      text='number of points = ')
+        self.rand_entry = Entry(self.user_frame)
+        self.rand_button = Button(self.user_frame, text='Generate')
+        self.rand_input = StringVar()
+        self.rand_input.set(str(10))
+        self.rand_entry["textvariable"] = self.rand_input
+        self.rand_button.bind('<Button-1>',
+                                   self._generate_new_rand)
+        self.rand_label0.pack()
+        self.rand_label1.pack()
+        self.rand_entry.pack()
+        self.rand_button.pack()
+
+        self.empty_label1 = Label(self.user_frame, text='\n\n')
+        self.empty_label1.pack()
 
         self.moving_point_label0 = Label(self.user_frame,
                                          text='Single Moving Point:')
@@ -211,6 +222,28 @@ class App(Frame):
         self.moving_point_label2.pack()
         self.moving_point_entry2.pack()
         self.moving_point_button.pack()
+
+        self.rand_seq_label0 = Label(self.user_frame,
+                                         text='Random Distribution Sequence:')
+        self.rand_seq_label1 = Label(self.user_frame, text='sequence length = ')
+        self.rand_seq_entry1 = Entry(self.user_frame)
+        self.rand_seq_label2 = Label(self.user_frame, text='number of points = ')
+        self.rand_seq_entry2 = Entry(self.user_frame)
+        self.rand_seq_button = Button(self.user_frame, text='Animate')
+        self.rand_seq_input1 = StringVar()
+        self.rand_seq_input1.set(str(20))
+        self.rand_seq_input2 = StringVar()
+        self.rand_seq_input2.set(str(10))
+        self.rand_seq_entry1["textvariable"] = self.rand_seq_input1
+        self.rand_seq_entry2["textvariable"] = self.rand_seq_input2
+        self.rand_seq_button.bind('<Button-1>',
+                                  self._animate_rand_seq)
+        self.rand_seq_label0.pack()
+        self.rand_seq_label1.pack()
+        self.rand_seq_entry1.pack()
+        self.rand_seq_label2.pack()
+        self.rand_seq_entry2.pack()
+        self.rand_seq_button.pack()
 
     def _draw_mass(self):
         self.drawing.draw_mass(self.mass)
@@ -283,18 +316,21 @@ class App(Frame):
         self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
         self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
 
-    def _generate_new_rand_cont(self, event):
+    def _generate_new_rand(self, event):
         try:
-            num = int(self.rand_cont_entry.get())
-            if num <= 0:
-                raise Exception()
-            self.mass = new_random_cont_mass(num)
-            self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
-            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+            num = int(self.rand_entry.get())
+            self._new_random(num)
             self._draw_mass()
             self._draw_tree()
         except Exception:
-            print('invalid input number of samples')
+            print('invalid input number of points')
+
+    def _new_random(self, num):
+        if num <= 0:
+            raise Exception()
+        self.mass = new_random_mass(num)
+        self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+        self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
 
     def _animate_moving_point(self, event):
         try:
@@ -316,6 +352,22 @@ class App(Frame):
             self._draw_tree()
         except Exception:
             print('invalid input range')
+
+    def _animate_rand_seq(self, event):
+        try:
+            n = int(self.rand_seq_input1.get())
+            num = int(self.rand_seq_input2.get())
+            if n < 0:
+                raise Exception()
+            for i in range(n):
+                self._new_random(num)
+                self._fuse_last()
+                self._draw_mass()
+                self._draw_tree()
+                self.drawing.canvas.update_idletasks()
+                time.sleep(0.2)
+        except Exception:
+            print('invalid input')
 
 
 def generate_kserver(N):
@@ -353,28 +405,47 @@ def new_degenerate_mass(x):
     return m
 
 
-def new_random_cont_mass(num):
-    """Generates a new random continuous mass distribution on [0, 1] by
-    uniformly drawing the specified number of samples on [0, 1].
-
-    Args:
-        num (int): The specified number of points.
-
-    Returns:
-        :obj:`function`: The mass function generated.
-    """
+def new_random_mass(num_points):
     points = []
-    for i in range(num):
+    for i in range(num_points):
         points.append(random.random())
     points.sort()
+    mass = []
+    total = 0
+    for i in range(num_points):
+        rand = random.random()
+        mass.append(rand)
+        total += rand
+    mass = [m / total for m in mass]
 
-    def m(itv):
+    # reduce error caused by floating points
+    sum = 0
+    for m in mass:
+        sum += m
+    diff = 1.0 - sum
+    randi = random.randrange(num_points)
+    tmp = mass[randi] + diff
+    while tmp > 1.0 or tmp < 0.0:
+        randi = random.randrange(num_points)
+        tmp = mass[randi] + diff
+    mass[randi] += diff
+
+    prefix_sum = []
+    total = 0
+    for m in mass:
+        total += m
+        prefix_sum.append(total)
+
+    def mf(itv):     # itv half-closed [a, b)
         points_list = points
-        left = bisect.bisect_left(points_list, itv.left)
-        right = bisect.bisect_right(points_list, itv.right)
-        return (right - left) / len(points_list)
+        mass_prefix = prefix_sum
+        left = bisect.bisect_left(points_list, itv.left) - 1
+        right = bisect.bisect_left(points_list, itv.right) - 1
+        cum_mass_left = mass_prefix[left] if left >= 0 else 0
+        cum_mass_right = mass_prefix[right] if right >= 0 else 0
+        return cum_mass_right - cum_mass_left
 
-    return m
+    return mf
 
 
 def tmp_m(itv):
