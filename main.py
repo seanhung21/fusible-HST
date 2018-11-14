@@ -149,6 +149,37 @@ class App(Frame):
         self.fusion_label0.pack()
         self.fusion_label1.pack()
 
+        self.empty_label2 = Label(self.user_frame, text='\n\n')
+        self.empty_label2.pack()
+
+        self.param_label0 = Label(self.user_frame, text="Parameters:")
+        self.param_label1 = Label(self.user_frame, text="heavy = ")
+        self.param_label2 = Label(self.user_frame, text="inactive = ")
+        self.param_label3 = Label(self.user_frame, text="neighbor range = ")
+        self.param_entry1 = Entry(self.user_frame)
+        self.param_entry2 = Entry(self.user_frame)
+        self.param_entry3 = Entry(self.user_frame)
+        self.param_input1 = StringVar()
+        self.param_input2 = StringVar()
+        self.param_input3 = StringVar()
+        self.param_input1.set(str(0.9))
+        self.param_input2.set(str(0.01))
+        self.param_input3.set(str(4))
+        self.param_entry1["textvariable"] = self.param_input1
+        self.param_entry2["textvariable"] = self.param_input2
+        self.param_entry3["textvariable"] = self.param_input3
+        self.param_button = Button(self.user_frame, text='Apply')
+        self.param_button.bind('<Button-1>', self._apply_params)
+
+        self.param_label0.pack()
+        self.param_label1.pack()
+        self.param_entry1.pack()
+        self.param_label2.pack()
+        self.param_entry2.pack()
+        self.param_label3.pack()
+        self.param_entry3.pack()
+        self.param_button.pack()
+
         self.empty_label0 = Label(self.user_frame, text='\n\n')
         self.empty_label0.pack()
 
@@ -299,6 +330,20 @@ class App(Frame):
             self._draw_tree()
         except Exception:
             print('invalid input levels')
+
+    def _apply_params(self, event):
+        try:
+            heavy = float(self.param_input1.get())
+            inactive = float(self.param_input2.get())
+            neighbor = int(self.param_input3.get())
+            self.b_alpha = heavy
+            self.s_alpha = inactive
+            self.r = neighbor
+            self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+            self._draw_tree()
+        except Exception:
+            print('invalid parameters')
 
     def _generate_new_degenerate(self, event):
         try:
