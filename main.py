@@ -42,7 +42,7 @@ class Drawing(Frame):
             self.canvas.create_line(self.x0 + i, self.mass_y0,
                                     self.x0 + i,
                                     self.mass_y0 - self.mass_height * m / self.mass_scale,
-                                    fill='blue', tags='mass')
+                                    fill='blue', width=4, tags='mass')
 
     def draw_tree(self, tree, mass_f, s_alpha):
         self.canvas.delete('tree')
@@ -101,7 +101,8 @@ class Drawing(Frame):
 
 class App(Frame):
 
-    def __init__(self, kserver, mass_f, big_alpha, small_alpha, r, master=None):
+    def __init__(self, kserver, mass_f, big_alpha, small_alpha, r,
+                 master=None, mass_sequence=None):
         super().__init__(master)
         self.pack()
 
@@ -276,6 +277,15 @@ class App(Frame):
         self.rand_seq_entry2.pack()
         self.rand_seq_button.pack()
 
+        self.mass_sequence = mass_sequence
+        self.mass_seq_label = Label(self.user_frame, text='Input Mass Sequence:')
+        self.mass_seq_button = Button(self.user_frame, text='Animate Again')
+        self.mass_seq_button.bind('<Button-1>', self._animate_mass_seq)
+        self.mass_seq_label.pack()
+        self.mass_seq_button.pack()
+        if self.mass_sequence is not None:
+            self._animate_mass_seq('<Button-1>')
+
     def _draw_mass(self):
         self.drawing.draw_mass(self.mass)
 
@@ -414,6 +424,19 @@ class App(Frame):
         except Exception:
             print('invalid input')
 
+    def _animate_mass_seq(self, event):
+        if self.mass_sequence is None:
+            raise Exception('No input mass sequence')
+        for mf in self.mass_sequence:
+            self.mass = mf
+            self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+            self._fuse_last()
+            self._draw_mass()
+            self._draw_tree()
+            self.drawing.canvas.update_idletasks()
+            time.sleep(0.2)
+
 
 def generate_kserver(N):
 
@@ -493,18 +516,54 @@ def new_random_mass(num_points):
     return mf
 
 
-def tmp_m(itv):
+def generate_mass_from_list(mass_list):
+    num = len(mass_list)
+    positions = [(2*i+1)/(2*num) for i in range(num)]
+
     total = 0
-    if itv.contains(0.3):
-        total += 0.91
-    if itv.contains(0.9):
-        total += 0.09
-    return total
+    for i in range(num):
+        total += mass_list[i]
+    mass_list = [m / total for m in mass_list]
+
+    prefix_sum = []
+    total = 0
+    for m in mass_list:
+        total += m
+        prefix_sum.append(total)
+
+    def mf(itv):     # itv half-closed [a, b)
+        points_list = positions
+        mass_prefix = prefix_sum
+        left = bisect.bisect_left(points_list, itv.left) - 1
+        right = bisect.bisect_left(points_list, itv.right) - 1
+        cum_mass_left = mass_prefix[left] if left >= 0 else 0
+        cum_mass_right = mass_prefix[right] if right >= 0 else 0
+        return cum_mass_right - cum_mass_left
+
+    return mf
 
 
-if __name__ == '__main__':
+def animate_mass_sequence(sequence):
+    """Run visualization with an input sequence of mass distributions.
+
+    Args:
+        sequence (:obj:`List` of `List`): The input sequence of mass
+        distributions. Each element of the outer list is a list specifying the
+        amount of mass. A list l of length n with total mass M represents a
+        distribution with Prob((2i+1)/(2n)) = l[i] / M .
+    """
+    mass_func_sequence = [generate_mass_from_list(l) for l in sequence]
+    main(mass_func_sequence)
+
+
+def main(mass_sequence):
     ks = generate_kserver(8)
     root = Tk()
     root.title("Visualization")
-    app = App(ks, new_degenerate_mass(0.33), 0.9, 0.01, 4, master=root)
+    app = App(ks, new_degenerate_mass(0.33), 0.9, 0.01, 4,
+              master=root, mass_sequence=mass_sequence)
     root.mainloop()
+
+
+if __name__ == '__main__':
+    main(None)
