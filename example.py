@@ -8,7 +8,7 @@ for i in range(32):
     mass = [0] * 32
     mass[i] = 1
     sequence.append(mass)
-animate_mass_sequence(sequence)
+animate_mass_sequence(sequence, 1)
 
 
 # Generate random walk mass sequence
@@ -29,4 +29,4 @@ for i in range(steps):
             p[j] -= 1
         else:
             p[j] += random.choice([1, -1])
-animate_mass_sequence(sequence)
+animate_mass_sequence(sequence, 0.5)

@@ -8,7 +8,7 @@ import time
 
 class Drawing(Frame):
 
-    def __init__(self, master=None):
+    def __init__(self, master=None, mass_scale=0.7):
         super().__init__(master)
         self.pack()
 
@@ -23,7 +23,7 @@ class Drawing(Frame):
         self.level_gap = 25
         self.mass_y0 = 150
         self.mass_height = 100
-        self.mass_scale = 0.7
+        self.mass_scale = mass_scale
 
         self.canvas.create_line(self.x0, self.mass_y0,
                                 self.x0 + self.scale, self.mass_y0, width=4)
@@ -102,11 +102,12 @@ class Drawing(Frame):
 class App(Frame):
 
     def __init__(self, kserver, mass_f, big_alpha, small_alpha, r,
-                 master=None, mass_sequence=None):
+                 master=None, mass_sequence=None, mass_scale=0.7):
         super().__init__(master)
         self.pack()
+        self.root = master
 
-        self.drawing = Drawing()
+        self.drawing = Drawing(mass_scale=mass_scale)
         self.user_frame = Frame()
         self.drawing.pack(side='left')
         self.user_frame.pack(side='right', fill='y')
@@ -405,6 +406,9 @@ class App(Frame):
             self._fuse_last()
             self._draw_mass()
             self._draw_tree()
+        except KeyboardInterrupt:
+            print('you pressed ctrl-c')
+            self.root.destroy()
         except Exception:
             print('invalid input range')
 
@@ -421,21 +425,28 @@ class App(Frame):
                 self._draw_tree()
                 self.drawing.canvas.update_idletasks()
                 time.sleep(0.2)
+        except KeyboardInterrupt:
+            print('you pressed ctrl-c')
+            self.root.destroy()
         except Exception:
             print('invalid input')
 
     def _animate_mass_seq(self, event):
         if self.mass_sequence is None:
             raise Exception('No input mass sequence')
-        for mf in self.mass_sequence:
-            self.mass = mf
-            self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
-            self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
-            self._fuse_last()
-            self._draw_mass()
-            self._draw_tree()
-            self.drawing.canvas.update_idletasks()
-            time.sleep(0.2)
+        try:
+            for mf in self.mass_sequence:
+                self.mass = mf
+                self.kserver = generate_kserver(len(self.kserver.semi_clusterings)-1)
+                self.fhg = self.kserver.fuse_heavy_generator(self.mass, self.b_alpha, self.r)
+                self._fuse_last()
+                self._draw_mass()
+                self._draw_tree()
+                self.drawing.canvas.update_idletasks()
+                time.sleep(0.2)
+        except KeyboardInterrupt:
+            print('you pressed ctrl-c')
+            self.root.destroy()
 
 
 def generate_kserver(N):
@@ -543,7 +554,7 @@ def generate_mass_from_list(mass_list):
     return mf
 
 
-def animate_mass_sequence(sequence):
+def animate_mass_sequence(sequence, mass_func_display_scale=0.7):
     """Run visualization with an input sequence of mass distributions.
 
     Args:
@@ -551,17 +562,20 @@ def animate_mass_sequence(sequence):
         distributions. Each element of the outer list is a list specifying the
         amount of mass. A list l of length n with total mass M represents a
         distribution with Prob((2i+1)/(2n)) = l[i] / M .
+        mass_func_display_scale (float): A real value between 0 and 1
+        specifying the display scale of the mass function. Default to 0.7.
     """
     mass_func_sequence = [generate_mass_from_list(l) for l in sequence]
-    main(mass_func_sequence)
+    main(mass_func_sequence, mass_func_display_scale)
 
 
-def main(mass_sequence):
+def main(mass_sequence, mass_func_display_scale=0.7):
     ks = generate_kserver(8)
     root = Tk()
     root.title("Visualization")
     app = App(ks, new_degenerate_mass(0.33), 0.9, 0.01, 4,
-              master=root, mass_sequence=mass_sequence)
+              master=root, mass_sequence=mass_sequence,
+              mass_scale=mass_func_display_scale)
     root.mainloop()
 
 
