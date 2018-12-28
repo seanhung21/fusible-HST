@@ -4,6 +4,8 @@ from tkinter import *
 import random
 import bisect
 import time
+import matplotlib
+import matplotlib.cm as cm
 
 
 class Drawing(Frame):
@@ -14,7 +16,7 @@ class Drawing(Frame):
 
         self.canvas = Canvas(self, width=1600, height=900,
                              bg='white')
-        self.canvas.pack()
+        self.canvas.pack(fill='both', expand=True)
 
         self.scale = 1500
         self.x0 = 50
@@ -34,6 +36,8 @@ class Drawing(Frame):
                                 text=str(0), font=("Courier", 14))
         self.canvas.create_text(self.x0 - 25, self.mass_y0 - self.mass_height,
                                 text=str(self.mass_scale), font=("Courier", 14))
+
+        self.cmap = cm.get_cmap('YlGnBu')
 
     def draw_mass(self, mass_f):
         self.canvas.delete('mass')
@@ -67,9 +71,7 @@ class Drawing(Frame):
         if mass < s_alpha:
             col_string = '#b3b6b7'      # gray
         else:
-            rg_value = 255 - min(255, int(mass * 128 + 128))
-            rgb = (rg_value, rg_value, 255)
-            col_string = '#' + ''.join('{:02X}'.format(c) for c in rgb)
+            col_string = self.mass2color(mass)
         left_border = 1600
         right_border = 0
         upper = self.y0 + level * (self.node_height + self.level_gap)
@@ -98,6 +100,10 @@ class Drawing(Frame):
                                 fill=border_color, width=border_width, tags='tree')
         return mid_pos
 
+    def mass2color(self, mass):
+        color = self.cmap(float(mass))
+        return matplotlib.colors.rgb2hex(color[:3])
+
 
 class App(Frame):
 
@@ -109,7 +115,7 @@ class App(Frame):
 
         self.drawing = Drawing(mass_scale=mass_scale)
         self.user_frame = Frame()
-        self.drawing.pack(side='left')
+        self.drawing.pack(side='left', fill='both', expand=True)
         self.user_frame.pack(side='right', fill='y')
 
         input_rule = "insert <level> <left> <right>\n" + \
