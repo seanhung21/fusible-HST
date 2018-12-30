@@ -1,5 +1,13 @@
 # fusible-HST
 
+
+## Requirement
+
+- matplotlib (>=2.2.3)
+
+
+## Usage
+
 To run the program (without mass sequence input):
 
 ```
