@@ -3,6 +3,7 @@
 
 ## Requirement
 
+- Python 3 (>=3.5)
 - matplotlib (>=2.2.3)
 
 
