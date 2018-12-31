@@ -8,13 +8,7 @@
 
 ## Usage
 
-To run the program (without mass sequence input):
-
-```
-python3 main.py
-```
-
-Run animation of a mass sequence:
+Run animation on a mass sequence:
 
 ```python
 >>> from main import animate_mass_sequence
@@ -25,8 +19,8 @@ Run animation of a mass sequence:
 ...        [0, 1, 0, 1, 0],
 ...        [1, 0, 0, 0, 1]]
 
->>> animate_mass_sequence(seq)
+>>> animate_mass_sequence(seq, mass_func_display_scale=1)
 ```
 For more details, see the docstring of 
-[animate_mass_sequence](https://github.com/seanhung21/fusible-HST/blob/master/main.py#L547)
+[animate_mass_sequence](https://github.com/seanhung21/fusible-HST/blob/master/main.py#L239)
 and the [example code](https://github.com/seanhung21/fusible-HST/blob/master/example.py).
